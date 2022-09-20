@@ -10,11 +10,13 @@ reasonably quickly, and makes for feasible memory usage.
 # Authors:  Iain Marshall <mail@ijmarshall.com>
 #           Joel Kuiper <me@joelkuiper.com>
 #           Byron Wallace <byron@ccs.neu.edu>
-
+import torch
 from scipy.sparse import csr_matrix
 import numpy as np
 import scipy
 import logging
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 log = logging.getLogger(__name__)
 
 
@@ -65,8 +67,24 @@ class MiniClassifier:
         for estimating w included a log-loss! Otherwise need 
         to calibrate.
         '''
-        def sigmoid(z):
-            s = 1.0 / (1.0 + np.exp(-1.0 * z))
-            return s
+
         scores = self.decision_function(X)
         return sigmoid(scores)
+
+    def predict_proba_logits(self, X):
+        '''
+        Also returns the logits.
+        '''
+
+        scores = self.decision_function(X)
+        return sigmoid(scores), scores
+
+
+def sigmoid(z):
+    s = 1.0 / (1.0 + np.exp(-1.0 * z))
+    return s
+
+
+def sigmoid_torch(z):
+    s = 1.0 / (1.0 + torch.exp(-1.0 * z))
+    return s

@@ -22,6 +22,9 @@ Ye Zhang and Byron Wallace. "A Sensitivity Analysis of (and Practitioners' Guide
 
 import pdb
 import sys
+
+from robotreviewer.ml.classifier import sigmoid
+
 try:
     reload(sys)
     sys.setdefaultencoding('utf8')
@@ -96,8 +99,12 @@ class RationaleCNN:
             with open(document_model_architecture_path) as doc_arch:
                 doc_arch_str = doc_arch.read()
                 self.doc_model = model_from_json(doc_arch_str)
-
             self.doc_model.load_weights(document_model_weights_path)
+
+            print("Changing original CNN model's output to linear instead of sigmoid")
+            penultimate_layer = self.doc_model.layers[-2]
+            new_top_layer = Dense(1, activation="linear", name="linear_doc_prediction")(penultimate_layer.output)
+            self.doc_model = Model(self.doc_model.input, new_top_layer)
 
             self.set_final_sentence_model() # setup sentence model, too
             
@@ -445,8 +452,8 @@ class RationaleCNN:
 
 
         # doc pred
-        doc_pred = self.doc_model.predict(X_doc)[0][0]
-
+        doc_logit = self.doc_model.predict(X_doc)[0][0]
+        doc_pred = sigmoid(doc_logit)
         log.info('done the doc preds')
 
         # now rank sentences; 0 indicates 'test time'
@@ -467,7 +474,7 @@ class RationaleCNN:
         else:
             rationales = [doc.sentences[r_idx] for r_idx in rationale_indices]
 
-        return (doc_pred, rationales)
+        return (doc_pred, doc_logit, rationales)
 
 
     def train_sentence_model(self, train_documents, nb_epoch=5,

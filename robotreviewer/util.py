@@ -1,3 +1,5 @@
+import csv
+import json
 import os
 import base64
 
@@ -6,3 +8,19 @@ def rand_id():
 
 def str2bool(v):
     return v.lower() in ("yes", "true", "t", "1")
+
+
+def read_csv(f, keys=None):
+    with open(f) as csvfile:
+        if keys is not None:
+            reader = csv.DictReader(csvfile, fieldnames=keys)
+        else:
+            reader = csv.DictReader(csvfile)
+        for row in reader:
+            yield row
+
+
+def load_json(filename):
+    with open(filename) as in_f:
+        return json.load(in_f)
+
