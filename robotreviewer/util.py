@@ -20,6 +20,11 @@ def read_csv(f, keys=None):
             yield row
 
 
+def save_json(obj, filename):
+    with open(filename, "w") as out:
+        json.dump(obj, out, separators=(',', ':'), indent=2, sort_keys=True)
+
+
 def load_json(filename):
     with open(filename) as in_f:
         return json.load(in_f)
